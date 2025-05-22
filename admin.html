@@ -42,18 +42,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Administración de Encuesta</title>
+  <title>Administración - Institución Educativa Vasco Núñez de Balboa</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
   <div class="bg-white p-6 rounded-lg shadow-lg max-w-4xl w-full">
-    <h1 class="text-2xl font-bold text-center mb-6">Resultados de la Encuesta</h1>
+    <h1 class="text-2xl font-bold text-center mb-6">INSTITUCIÓN EDUCATIVA VASCO NÚÑEZ DE BALBOA - Resultados de la Encuesta</h1>
     
     <!-- Resumen -->
-    <div class="mb-6">
+    <div class="mb-6 flex space-x-4">
       <p class="text-sm font-medium text-gray-700">Respuestas registradas: <span id="response-count">0</span>/700</p>
-      <button id="export-btn" class="mt-4 w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700" disabled>Exportar a Excel</button>
+      <button id="export-btn" class="w-1/3 bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700" disabled>Exportar a Excel</button>
+      <button id="clear-btn" class="w-1/3 bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700">Borrar Todo</button>
     </div>
 
     <!-- Tabla de resultados -->
@@ -66,24 +67,94 @@
             <th class="py-2 px-4 border-b text-left text-sm font-medium text-gray-700">ID</th>
             <th class="py-2 px-4 border-b text-left text-sm font-medium text-gray-700">Grado</th>
             <th class="py-2 px-4 border-b text-left text-sm font-medium text-gray-700">Interés</th>
+            <th class="py-2 px-4 border-b text-left text-sm font-medium text-gray-700">Acciones</th>
           </tr>
         </thead>
         <tbody id="results-table"></tbody>
       </table>
     </div>
 
+    <!-- Modal para edición -->
+    <div id="edit-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
+      <div class="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+        <h2 class="text-xl font-bold mb-4">Editar Respuesta</h2>
+        <div class="space-y-4">
+          <div>
+            <label for="edit-nombre" class="block text-sm font-medium text-gray-700">Nombre</label>
+            <input type="text" id="edit-nombre" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+          </div>
+          <div>
+            <label for="edit-apellido" class="block text-sm font-medium text-gray-700">Apellido</label>
+            <input type="text" id="edit-apellido" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+          </div>
+          <div>
+            <label for="edit-id" class="block text-sm font-medium text-gray-700">Documento de Identidad</label>
+            <input type="text" id="edit-id" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm" disabled>
+          </div>
+          <div>
+            <label for="edit-grado" class="block text-sm font-medium text-gray-700">Grado</label>
+            <select id="edit-grado" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+              <option value="6-1">6-1</option>
+              <option value="6-2">6-2</option>
+              <option value="6-3">6-3</option>
+              <option value="6-4">6-4</option>
+              <option value="6-5">6-5</option>
+              <option value="7-1">7-1</option>
+              <option value="7-2">7-2</option>
+              <option value="7-3">7-3</option>
+              <option value="7-4">7-4</option>
+              <option value="7-5">7-5</option>
+              <option value="8-1">8-1</option>
+              <option value="8-2">8-2</option>
+              <option value="8-3">8-3</option>
+              <option value="8-4">8-4</option>
+              <option value="8-5">8-5</option>
+              <option value="9-1">9-1</option>
+              <option value="9-2">9-2</option>
+              <option value="9-3">9-3</option>
+              <option value="9-4">9-4</option>
+              <option value="10-1">10-1</option>
+              <option value="10-2">10-2</option>
+              <option value="10-3">10-3</option>
+              <option value="11-1">11-1</option>
+              <option value="11-2">11-2</option>
+              <option value="11-3">11-3</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Centro de Interés</label>
+            <div class="mt-2 space-y-2">
+              <div><label><input type="radio" name="edit-interes" value="Lectoescritura" class="edit-interes-radio" required> Lectoescritura</label></div>
+              <div><label><input type="radio" name="edit-interes" value="Arte y cultura" class="edit-interes-radio"> Arte y cultura</label></div>
+              <div><label><input type="radio" name="edit-interes" value="Ciencia" class="edit-interes-radio"> Ciencia</label></div>
+              <div><label><input type="radio" name="edit-interes" value="Tecnología" class="edit-interes-radio"> Tecnología</label></div>
+              <div><label><input type="radio" name="edit-interes" value="Deportes" class="edit-interes-radio"> Deportes</label></div>
+              <div><label><input type="radio" name="edit-interes" value="Idiomas" class="edit-interes-radio"> Idiomas</label></div>
+              <div><label><input type="radio" name="edit-interes" value="Medio ambiente" class="edit-interes-radio"> Medio ambiente</label></div>
+              <div><label><input type="radio" name="edit-interes" value="Música" class="edit-interes-radio"> Música</label></div>
+            </div>
+          </div>
+          <div class="flex space-x-4">
+            <button id="save-edit-btn" class="w-1/2 bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700">Guardar</button>
+            <button id="cancel-edit-btn" class="w-1/2 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400">Cancelar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script>
       // Cargar respuestas desde localStorage
-      const responses = JSON.parse(localStorage.getItem('encuestaResponses')) || [];
+      let responses = JSON.parse(localStorage.getItem('encuestaResponses')) || [];
 
       // Actualizar contador y tabla
       function updateResults() {
         document.getElementById('response-count').textContent = responses.length;
         document.getElementById('export-btn').disabled = responses.length === 0;
+        document.getElementById('clear-btn').disabled = responses.length === 0;
 
         const tableBody = document.getElementById('results-table');
         tableBody.innerHTML = '';
-        responses.forEach(response => {
+        responses.forEach((response, index) => {
           const row = document.createElement('tr');
           row.innerHTML = `
             <td class="py-2 px-4 border-b text-sm text-gray-700">${response.Nombre}</td>
@@ -91,10 +162,27 @@
             <td class="py-2 px-4 border-b text-sm text-gray-700">${response.ID}</td>
             <td class="py-2 px-4 border-b text-sm text-gray-700">${response.Grado}</td>
             <td class="py-2 px-4 border-b text-sm text-gray-700">${response.Interes}</td>
+            <td class="py-2 px-4 border-b text-sm text-gray-700">
+              <button class="edit-btn bg-blue-500 text-white py-1 px-2 rounded-md hover:bg-blue-600" data-index="${index}">Editar</button>
+            </td>
           `;
           tableBody.appendChild(row);
         });
+
+        // Agregar eventos a los botones de edición
+        document.querySelectorAll('.edit-btn').forEach(button => {
+          button.addEventListener('click', () => openEditModal(parseInt(button.dataset.index)));
+        });
       }
+
+      // Borrar todas las respuestas
+      document.getElementById('clear-btn').addEventListener('click', () => {
+        if (confirm('¿Está seguro de que desea borrar todas las respuestas? Esta acción no se puede deshacer.')) {
+          responses = [];
+          localStorage.setItem('encuestaResponses', JSON.stringify(responses));
+          updateResults();
+        }
+      });
 
       // Exportar a Excel
       document.getElementById('export-btn').addEventListener('click', () => {
@@ -103,6 +191,48 @@
         XLSX.utils.book_append_sheet(workbook, worksheet, 'Encuesta');
         XLSX.writeFile(workbook, 'encuesta_resultados.xlsx');
       });
+
+      // Abrir modal de edición
+      function openEditModal(index) {
+        const response = responses[index];
+        document.getElementById('edit-nombre').value = response.Nombre;
+        document.getElementById('edit-apellido').value = response.Apellido;
+        document.getElementById('edit-id').value = response.ID;
+        document.getElementById('edit-grado').value = response.Grado;
+        document.querySelector(`.edit-interes-radio[value="${response.Interes}"]`).checked = true;
+        document.getElementById('edit-modal').classList.remove('hidden');
+
+        // Guardar cambios
+        document.getElementById('save-edit-btn').onclick = () => {
+          const nombre = document.getElementById('edit-nombre').value.trim();
+          const apellido = document.getElementById('edit-apellido').value.trim();
+          const grado = document.getElementById('edit-grado').value;
+          const interes = document.querySelector('.edit-interes-radio:checked')?.value;
+
+          // Validaciones
+          if (!nombre || !apellido || !grado || !interes) {
+            alert('Por favor, complete todos los campos y seleccione un centro de interés.');
+            return;
+          }
+
+          // Actualizar respuesta
+          responses[index] = {
+            Nombre: nombre,
+            Apellido: apellido,
+            ID: response.ID,
+            Grado: grado,
+            Interes: interes
+          };
+          localStorage.setItem('encuestaResponses', JSON.stringify(responses));
+          document.getElementById('edit-modal').classList.add('hidden');
+          updateResults();
+        };
+
+        // Cancelar edición
+        document.getElementById('cancel-edit-btn').onclick = () => {
+          document.getElementById('edit-modal').classList.add('hidden');
+        };
+      }
 
       // Inicializar la tabla
       updateResults();

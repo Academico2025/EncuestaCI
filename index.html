@@ -1,0 +1,166 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Encuesta de Centros de Interés</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+  <div class="bg-white p-6 rounded-lg shadow-lg max-w-2xl w-full">
+    <h1 class="text-2xl font-bold text-center mb-6">Encuesta de Centros de Interés</h1>
+    
+    <!-- Formulario -->
+    <div id="form-container" class="space-y-4">
+      <div>
+        <label for="nombre" class="block text-sm font-medium text-gray-700">Nombre</label>
+        <input type="text" id="nombre" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+      </div>
+      <div>
+        <label for="apellido" class="block text-sm font-medium text-gray-700">Apellido</label>
+        <input type="text" id="apellido" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+      </div>
+      <div>
+        <label for="id" class="block text-sm font-medium text-gray-700">Documento de Identidad</label>
+        <input type="text" id="id" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+      </div>
+      <div>
+        <label for="grado" class="block text-sm font-medium text-gray-700">Grado</label>
+        <select id="grado" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+          <option value="" disabled selected>Seleccione un grado</option>
+          <option value="6-1">6-1</option>
+          <option value="6-2">6-2</option>
+          <option value="6-3">6-3</option>
+          <option value="6-4">6-4</option>
+          <option value="6-5">6-5</option>
+          <option value="7-1">7-1</option>
+          <option value="7-2">7-2</option>
+          <option value="7-3">7-3</option>
+          <option value="7-4">7-4</option>
+          <option value="7-5">7-5</option>
+          <option value="8-1">8-1</option>
+          <option value="8-2">8-2</option>
+          <option value="8-3">8-3</option>
+          <option value="8-4">8-4</option>
+          <option value="8-5">8-5</option>
+          <option value="9-1">9-1</option>
+          <option value="9-2">9-2</option>
+          <option value="9-3">9-3</option>
+          <option value="9-4">9-4</option>
+          <option value="10-1">10-1</option>
+          <option value="10-2">10-2</option>
+          <option value="10-3">10-3</option>
+          <option value="11-1">11-1</option>
+          <option value="11-2">11-2</option>
+          <option value="11-3">11-3</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Centro de Interés (seleccione uno)</label>
+        <div id="intereses" class="mt-2 space-y-2 max-h-48 overflow-y-auto">
+          <div><label><input type="radio" name="interes" value="Lectoescritura" class="interes-radio" required> Lectoescritura</label></div>
+          <div><label><input type="radio" name="interes" value="Arte y cultura" class="interes-radio"> Arte y cultura</label></div>
+          <div><label><input type="radio" name="interes" value="Ciencia" class="interes-radio"> Ciencia</label></div>
+          <div><label><input type="radio" name="interes" value="Tecnología" class="interes-radio"> Tecnología</label></div>
+          <div><label><input type="radio" name="interes" value="Deportes" class="interes-radio"> Deportes</label></div>
+          <div><label><input type="radio" name="interes" value="Idiomas" class="interes-radio"> Idiomas</label></div>
+          <div><label><input type="radio" name="interes" value="Medio ambiente" class="interes-radio"> Medio ambiente</label></div>
+          <div><label><input type="radio" name="interes" value="Música" class="interes-radio"> Música</label></div>
+        </div>
+      </div>
+      <button id="submit-btn" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700">Enviar Respuesta</button>
+    </div>
+
+    <script>
+      const maxResponses = 700;
+
+      // Cargar respuestas existentes desde localStorage
+      let responses = JSON.parse(localStorage.getItem('encuestaResponses')) || [];
+
+      // Manejar envío del formulario
+      document.getElementById('submit-btn').addEventListener('click', () => {
+        const nombre = document.getElementById('nombre').value.trim();
+        const apellido = document.getElementById('apellido').value.trim();
+        const id = document.getElementById('id').value.trim();
+        const grado = document.getElementById('grado').value;
+        const interes = document.querySelector('.interes-radio:checked')?.value;
+
+        // Validaciones
+        if (!nombre || !apellido || !id || !grado || !interes) {
+          alert('Por favor, complete todos los campos y seleccione un centro de interés.');
+          return;
+        }
+        if (responses.length >= maxResponses) {
+          alert('Se ha alcanzado el límite de 700 respuestas.');
+          return;
+        }
+        if (responses.some(r => r.ID === id)) {
+          alert('Este documento de identidad ya ha sido registrado.');
+          return;
+        }
+
+        // Agregar respuesta
+        const response = {
+          Nombre: nombre,
+          Apellido: apellido,
+          ID: id,
+          Grado: grado,
+          Interes: interes
+        };
+        responses.push(response);
+
+        // Guardar en localStorage
+        localStorage.setItem('encuestaResponses', JSON.stringify(responses));
+
+        // Limpiar formulario
+        document.getElementById('nombre').value = '';
+        document.getElementById('apellido').value = '';
+        document.getElementById('id').value = '';
+        document.getElementById('grado').value = '';
+        document.querySelectorAll('.interes-radio').forEach(radio => radio.checked = false);
+
+        alert('Respuesta enviada correctamente.');
+      });
+    </script>
+  </div>
+</body>
+</html>

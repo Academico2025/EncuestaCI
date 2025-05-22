@@ -1,0 +1,112 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Administración de Encuesta</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+  <div class="bg-white p-6 rounded-lg shadow-lg max-w-4xl w-full">
+    <h1 class="text-2xl font-bold text-center mb-6">Resultados de la Encuesta</h1>
+    
+    <!-- Resumen -->
+    <div class="mb-6">
+      <p class="text-sm font-medium text-gray-700">Respuestas registradas: <span id="response-count">0</span>/700</p>
+      <button id="export-btn" class="mt-4 w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700" disabled>Exportar a Excel</button>
+    </div>
+
+    <!-- Tabla de resultados -->
+    <div class="overflow-x-auto">
+      <table class="min-w-full bg-white border border-gray-200">
+        <thead>
+          <tr>
+            <th class="py-2 px-4 border-b text-left text-sm font-medium text-gray-700">Nombre</th>
+            <th class="py-2 px-4 border-b text-left text-sm font-medium text-gray-700">Apellido</th>
+            <th class="py-2 px-4 border-b text-left text-sm font-medium text-gray-700">ID</th>
+            <th class="py-2 px-4 border-b text-left text-sm font-medium text-gray-700">Grado</th>
+            <th class="py-2 px-4 border-b text-left text-sm font-medium text-gray-700">Interés</th>
+          </tr>
+        </thead>
+        <tbody id="results-table"></tbody>
+      </table>
+    </div>
+
+    <script>
+      // Cargar respuestas desde localStorage
+      const responses = JSON.parse(localStorage.getItem('encuestaResponses')) || [];
+
+      // Actualizar contador y tabla
+      function updateResults() {
+        document.getElementById('response-count').textContent = responses.length;
+        document.getElementById('export-btn').disabled = responses.length === 0;
+
+        const tableBody = document.getElementById('results-table');
+        tableBody.innerHTML = '';
+        responses.forEach(response => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td class="py-2 px-4 border-b text-sm text-gray-700">${response.Nombre}</td>
+            <td class="py-2 px-4 border-b text-sm text-gray-700">${response.Apellido}</td>
+            <td class="py-2 px-4 border-b text-sm text-gray-700">${response.ID}</td>
+            <td class="py-2 px-4 border-b text-sm text-gray-700">${response.Grado}</td>
+            <td class="py-2 px-4 border-b text-sm text-gray-700">${response.Interes}</td>
+          `;
+          tableBody.appendChild(row);
+        });
+      }
+
+      // Exportar a Excel
+      document.getElementById('export-btn').addEventListener('click', () => {
+        const worksheet = XLSX.utils.json_to_sheet(responses);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Encuesta');
+        XLSX.writeFile(workbook, 'encuesta_resultados.xlsx');
+      });
+
+      // Inicializar la tabla
+      updateResults();
+    </script>
+  </div>
+</body>
+</html>
